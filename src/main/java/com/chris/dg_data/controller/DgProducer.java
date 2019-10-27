@@ -28,13 +28,14 @@ public class DgProducer {
 	private SettlementerService settlementerService;
 
 	@RequestMapping(value = "/generateDgData", method = RequestMethod.GET)
-	public String generateDgData(@RequestParam("month") String month) {
+	public String generateDgData(@RequestParam(value = "month") String month) {
 		if (StringUtils.isNotEmpty(month) && StringUtils.isNotEmpty(basePath)) {
 
-			List<String> allSettlementer = settlementerService.getAllSettlementer();
-			List<Conditions> conditionsList = generateDataFolders(basePath, allSettlementer, Integer.valueOf(month));
+			return "true";
+			/*List<String> allSettlementer = settlementerService.getAllSettlementer();
+			List<Conditions> conditionsList = generateDataFolders(basePath, allSettlementer, Integer.valueOf(month));*/
 		}
-		return "";
+		return "false";
 	}
 
 	/**
