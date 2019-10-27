@@ -30,8 +30,9 @@ public class DgProducer {
 	@RequestMapping(value = "/generateDgData", method = RequestMethod.GET)
 	public String generateDgData(@RequestParam("month") String month) {
 		if (StringUtils.isNotEmpty(month) && StringUtils.isNotEmpty(basePath)) {
-			List<Conditions> conditionsList = generateDataFolders(basePath, Integer.valueOf(month));
+
 			List<String> allSettlementer = settlementerService.getAllSettlementer();
+			List<Conditions> conditionsList = generateDataFolders(basePath, allSettlementer, Integer.valueOf(month));
 		}
 		return "";
 	}
@@ -42,20 +43,30 @@ public class DgProducer {
 	 * @param basePath the parent dir path
 	 * @param month    month number 1-12
 	 */
-	private List<Conditions> generateDataFolders(String basePath, int month) {
-		String parentPath = basePath + File.separator + month;
-		CommonUtils.generateFolder(parentPath);
+	private List<Conditions> generateDataFolders(String basePath, List<String> allSettlementer, int month) {
+		String monthDir = basePath + File.separator + month;
 		List<Conditions> conditionList = generateInterval(month);
-		for (Conditions conditions : conditionList) {
-			int begin = conditions.getBeginDay();
-			int end = conditions.getEndDay();
-			String subPath = parentPath + File.separator + begin + "-" + end;
-			CommonUtils.generateFolder(subPath);
-			conditions.setFilePath(subPath);
+
+		for (String settlementer : allSettlementer) {
+			String settlementerDir = monthDir + File.separator + settlementer;
+			for (Conditions conditions : conditionList) {
+				int begin = conditions.getBeginDay();
+				int end = conditions.getEndDay();
+				String intervalPath = settlementerDir + File.separator + begin + "-" + end;
+				CommonUtils.generateFolder(intervalPath);
+				conditions.setFilePath(intervalPath);
+			}
 		}
 		return conditionList;
 	}
 
+	/**
+	 * calcualte the begin and end of the interval
+	 * 1-3|4-6...
+	 *
+	 * @param month month number 1-12
+	 * @return Conditions object with begin and end
+	 */
 	private List<Conditions> generateInterval(int month) {
 		Calendar calendar = Calendar.getInstance();
 		calendar.set(Calendar.MONTH, month - 1);
@@ -66,8 +77,11 @@ public class DgProducer {
 		int number = days / 3;
 		for (int i = 0; i < number - 1; i++) {
 			int begin = tmp;
-			int end = tmp + 2;
-			conditionList.add(new Conditions(begin, end));
+
+			//1-3|4-6...
+			tmp += 2;
+
+			conditionList.add(new Conditions(begin, tmp));
 			tmp++;
 		}
 
@@ -75,6 +89,16 @@ public class DgProducer {
 		conditionList.add(new Conditions(tmp, days));
 
 		return conditionList;
+	}
+
+	public static void main(String[] args) {
+		DgProducer dgProducer = new DgProducer();
+		List<String> allSettlementer = new ArrayList<>();
+		allSettlementer.add("chris");
+		allSettlementer.add("john");
+		allSettlementer.add("周佳");
+		allSettlementer.add("吴德明");
+		dgProducer.generateDataFolders("E:/tmp", allSettlementer, 8);
 	}
 
 }
