@@ -4,16 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.ToString;
 
-@Data @ToString @AllArgsConstructor public class Conditions {
-
-	private String filePath;
+@Data
+@ToString
+@AllArgsConstructor
+public class Conditions {
 
 	private int beginDay;
 
 	private int endDay;
 
-	public Conditions(int beginDay, int endDay) {
-		this.beginDay = beginDay;
-		this.endDay = endDay;
-	}
 }

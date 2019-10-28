@@ -22,7 +22,7 @@ public class SettlementerServiceImpl implements SettlementerService {
 	}
 
 	@Override
-	public List<SettlementRecords> getSettlementRecords(String settlementCode, int beginDay, int endDay) {
-		return settlementerDao.getSettlementRecords(settlementCode, beginDay, endDay);
+	public List<SettlementRecords> getSettlementRecords(String settlementer, String beginDay, String endDay) {
+		return settlementerDao.getSettlementRecords(settlementer, beginDay, endDay);
 	}
 }

@@ -1,4 +1,4 @@
-package com.chris.dg_data.Config;
+package com.chris.dg_data.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

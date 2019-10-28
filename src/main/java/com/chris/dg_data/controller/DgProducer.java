@@ -1,9 +1,12 @@
 package com.chris.dg_data.controller;
 
 import com.chris.dg_data.beans.Conditions;
+import com.chris.dg_data.beans.SettlementRecords;
 import com.chris.dg_data.common.CommonUtils;
 import com.chris.dg_data.service.SettlementerService;
+import com.chris.dg_data.threadpool.GlobalThreadPool;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,8 +21,13 @@ import java.util.*;
 @RequestMapping("/dg")
 public class DgProducer {
 
+	private static Logger logger = Logger.getLogger(CommonUtils.class);
+
 	@Value("${basepath}")
 	private String basePath;
+
+	@Value("${default.thread.number}")
+	private String defalut_thread_number;
 
 	@Value("#{'${header}'.split(',')}")
 	private final List<String> header = null;
@@ -28,41 +36,75 @@ public class DgProducer {
 	private SettlementerService settlementerService;
 
 	@RequestMapping(value = "/generateDgData", method = RequestMethod.GET)
-	public String generateDgData(@RequestParam(value = "month") String month) {
+	public String generateDgData(@RequestParam(value = "year", required = false) String year,
+		@RequestParam(value = "month") String month, @RequestParam(value = "threads") String threads) {
+
+		List<String> allSettlementer = new ArrayList<>();
+
 		if (StringUtils.isNotEmpty(month) && StringUtils.isNotEmpty(basePath)) {
 
-			return "true";
-			/*List<String> allSettlementer = settlementerService.getAllSettlementer();
-			List<Conditions> conditionsList = generateDataFolders(basePath, allSettlementer, Integer.valueOf(month));*/
-		}
-		return "false";
-	}
-
-	/**
-	 * generate the data directories
-	 *
-	 * @param basePath the parent dir path
-	 * @param month    month number 1-12
-	 */
-	private List<Conditions> generateDataFolders(String basePath, List<String> allSettlementer, int month) {
-		String monthDir = basePath + File.separator + month;
-		List<Conditions> conditionList = generateInterval(month);
-
-		for (String settlementer : allSettlementer) {
-			String settlementerDir = monthDir + File.separator + settlementer;
-			for (Conditions conditions : conditionList) {
-				int begin = conditions.getBeginDay();
-				int end = conditions.getEndDay();
-				String intervalPath = settlementerDir + File.separator + begin + "-" + end;
-				CommonUtils.generateFolder(intervalPath);
-				conditions.setFilePath(intervalPath);
+			if (StringUtils.isEmpty(year)) {
+				year = String.valueOf(CommonUtils.getCurrentYear());
 			}
+			if (StringUtils.isEmpty(threads)) {
+				threads = defalut_thread_number;
+			}
+			allSettlementer = settlementerService.getAllSettlementer();
+			generateDataFileInBatchs(year, month, allSettlementer, Integer.parseInt(threads));
 		}
-		return conditionList;
+
+		String logInfo = "Amount of settlementer :" + allSettlementer.size() + ",[" + year + "-" + month + "]" + ", "
+			+ allSettlementer.toString();
+		logger.info(logInfo);
+
+		return logInfo;
+	}
+
+	private void generateDataFileInBatchs(String year, String month, List<String> allSettlementer, int threads) {
+		int block = allSettlementer.size() / threads;
+
+		int i = 0;
+		for (; i < threads - 1; i++) {
+			int begin = block * i;
+			int end = block * (i + 1) - 1;
+			List<String> one_block = allSettlementer.subList(begin, end);
+			processEachBatch(year, month, one_block);
+		}
+
+		// the last batch
+		List<String> last_block = allSettlementer.subList(block * i, allSettlementer.size() - 1);
+		processEachBatch(year, month, last_block);
+
+	}
+
+	private void processEachBatch(String year, String month, List<String> one_block) {
+		GlobalThreadPool.execute(() -> {
+			String threadName = Thread.currentThread().getName();
+			for (String settlementer : one_block) {
+				String settlementerDir = basePath + File.separator + month + File.separator + settlementer.trim();
+
+				if (CommonUtils.generateFolder(settlementerDir)) {
+					List<Conditions> conditionsList = generateInterval(Integer.parseInt(month));
+					for (Conditions conditions : conditionsList) {
+						String beginDateStr = year + "-" + month + "-" + conditions.getBeginDay();
+						String endDateStr = year + "-" + month + "-" + conditions.getEndDay();
+						logger.info(
+							threadName + ", settlementer:" + settlementer + "[" + beginDateStr + " To " + endDateStr
+								+ "]");
+
+						List<SettlementRecords> records =
+							settlementerService.getSettlementRecords(settlementer, beginDateStr, endDateStr);
+
+						String csvFileName = conditions.getBeginDay() + "-" + conditions.getEndDay() + ".csv";
+						CommonUtils.generateCsvFile(settlementerDir, csvFileName, header, records);
+					}
+				}
+			}
+		});
 	}
 
 	/**
-	 * calcualte the begin and end of the interval
+	 * calculate the begin and end of the interval
 	 * 1-3|4-6...
 	 *
 	 * @param month month number 1-12
@@ -90,16 +132,6 @@ public class DgProducer {
 		conditionList.add(new Conditions(tmp, days));
 
 		return conditionList;
-	}
-
-	public static void main(String[] args) {
-		DgProducer dgProducer = new DgProducer();
-		List<String> allSettlementer = new ArrayList<>();
-		allSettlementer.add("chris");
-		allSettlementer.add("john");
-		allSettlementer.add("周佳");
-		allSettlementer.add("吴德明");
-		dgProducer.generateDataFolders("E:/tmp", allSettlementer, 8);
 	}
 
 }

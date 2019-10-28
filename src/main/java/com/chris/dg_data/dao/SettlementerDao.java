@@ -9,5 +9,5 @@ public interface SettlementerDao {
 
 	public List<String> getAllSettlementer();
 
-	public List<SettlementRecords> getSettlementRecords(String settlementCode, int beginDay, int endDay);
+	public List<SettlementRecords> getSettlementRecords(String settlementCode, String beginDay, String endDay);
 }

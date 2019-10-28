@@ -1,4 +1,4 @@
-package com.chris.dg_data.Config;
+package com.chris.dg_data.config;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +12,8 @@ import javax.sql.DataSource;
 import java.sql.SQLException;
 
 @Configuration
-@ConditionalOnClass(com.alibaba.druid.pool.DruidDataSource.class)   //该注解的参数对应的类必须存在(DruidDataSource.class)，否则不解析该注解修饰的配置类；
+@ConditionalOnClass(com.alibaba.druid.pool.DruidDataSource.class)
+//该注解的参数对应的类必须存在(DruidDataSource.class)，否则不解析该注解修饰的配置类；
 @ConditionalOnProperty(name = "spring.datasource.type", havingValue = "com.alibaba.druid.pool.DruidDataSource", matchIfMissing = true)
 //控制某个configuration是否生效
 

@@ -9,5 +9,5 @@ public interface SettlementerService {
 
 	public List<String> getAllSettlementer();
 
-	public List<SettlementRecords> getSettlementRecords(String settlementCode, int beginDay, int endDay);
+	public List<SettlementRecords> getSettlementRecords(String settlementer, String beginDay, String endDay);
 }
