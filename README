@@ -1,7 +1,7 @@
 API
-                                                       http://localhost:8080/dg/generateDgData?year=2019&month=9&threads=30
-                                                   year: 年， 如果不输入， 系统默认取今年
-                                                   month: 月，必填
-                                                   threads: 并发数， 可选，如果不输入，系统默认并发量为20
+    http://localhost:8080/dg/generateDgData?year=2019&month=9&threads=30
+year: 年， 如果不输入， 系统默认取今年
+month: 月，必填
+threads: 并发数， 可选，如果不输入，系统默认并发量为20
 
-                                                   在application.properties中需修改文件生成的目录basepath=D:\\temp
+在application.properties中需修改文件生成的目录basepath=D:\\temp
