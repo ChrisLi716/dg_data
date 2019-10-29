@@ -21,12 +21,14 @@ class DgDataApplicationTests {
 	@Autowired
 	private SettlementerDao settlementerDao;
 
-	@Value("#{'${header}'.split(',')}")
+	@Value("#{'${dg.header}'.split(',')}")
 	private List<String> header;
 
 	@Test
 	void testAllSettlementer() {
-		List<String> allSettlementer = settlementerDao.getAllSettlementer();
+		List<String> allSettlementer = settlementerDao.getAllSettlementer(CommonUtils.getFirstDateOfMonth("2019", "09"),
+			CommonUtils.getLastDateOfMonth("2019", "09"));
+		System.out.println("all settlementer:" + allSettlementer.size());
 		for (String s : allSettlementer) {
 			System.out.println(s);
 		}

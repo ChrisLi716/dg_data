@@ -29,7 +29,7 @@ public class DgProducer {
 	@Value("${default.thread.number}")
 	private String defalut_thread_number;
 
-	@Value("#{'${header}'.split(',')}")
+	@Value("#{'${dg.header}'.split(',')}")
 	private final List<String> header = null;
 
 	@Autowired
@@ -41,6 +41,9 @@ public class DgProducer {
 
 		List<String> allSettlementer = new ArrayList<>();
 
+		String firstDateOfMonth = CommonUtils.getFirstDateOfMonth(year, month);
+		String lastDateOfMonth = CommonUtils.getLastDateOfMonth(year, month);
+
 		if (StringUtils.isNotEmpty(month) && StringUtils.isNotEmpty(basePath)) {
 
 			if (StringUtils.isEmpty(year)) {
@@ -49,31 +52,42 @@ public class DgProducer {
 			if (StringUtils.isEmpty(threads)) {
 				threads = defalut_thread_number;
 			}
-			allSettlementer = settlementerService.getAllSettlementer();
-			generateDataFileInBatchs(year, month, allSettlementer, Integer.parseInt(threads));
+
+			allSettlementer = settlementerService.getAllSettlementer(firstDateOfMonth, lastDateOfMonth);
+
+			if (!allSettlementer.isEmpty()) {
+				generateDataFileInBatchs(year, month, allSettlementer, Integer.parseInt(threads));
+			}
 		}
 
-		String logInfo = "Amount of settlementer :" + allSettlementer.size() + ",[" + year + "-" + month + "]" + ", "
-			+ allSettlementer.toString();
+		String logInfo =
+			"Amount of settlementer :" + allSettlementer.size() + ",[" + firstDateOfMonth + " To " + lastDateOfMonth
+				+ "]" + ", " + allSettlementer.toString();
 		logger.info(logInfo);
 
 		return logInfo;
 	}
 
 	private void generateDataFileInBatchs(String year, String month, List<String> allSettlementer, int threads) {
-		int block = allSettlementer.size() / threads;
 
-		int i = 0;
-		for (; i < threads - 1; i++) {
-			int begin = block * i;
-			int end = block * (i + 1) - 1;
-			List<String> one_block = allSettlementer.subList(begin, end);
-			processEachBatch(year, month, one_block);
+		if (allSettlementer.size() >= threads) {
+			int block = allSettlementer.size() / threads;
+
+			int i = 0;
+			for (; i < threads - 1; i++) {
+				int begin = block * i;
+				int end = block * (i + 1);
+				List<String> one_block = allSettlementer.subList(begin, end);
+				processEachBatch(year, month, one_block);
+			}
+
+			// the last batch
+			List<String> last_block = allSettlementer.subList(block * i, allSettlementer.size());
+			processEachBatch(year, month, last_block);
 		}
-
-		// the last batch
-		List<String> last_block = allSettlementer.subList(block * i, allSettlementer.size() - 1);
-		processEachBatch(year, month, last_block);
+		else {
+			processEachBatch(year, month, allSettlementer);
+		}
 
 	}
 

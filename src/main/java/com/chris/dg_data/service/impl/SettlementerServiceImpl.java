@@ -16,9 +16,8 @@ public class SettlementerServiceImpl implements SettlementerService {
 	private SettlementerDao settlementerDao;
 
 	@Override
-	public List<String> getAllSettlementer() {
-		List<String> settlementers = new ArrayList<>();
-		return settlementerDao.getAllSettlementer();
+	public List<String> getAllSettlementer(String beginDate, String endDate) {
+		return settlementerDao.getAllSettlementer(beginDate, endDate);
 	}
 
 	@Override

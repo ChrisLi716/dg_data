@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface SettlementerService {
 
-	public List<String> getAllSettlementer();
+	public List<String> getAllSettlementer(String beginDate, String endDate);
 
 	public List<SettlementRecords> getSettlementRecords(String settlementer, String beginDay, String endDay);
 }
