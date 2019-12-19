@@ -26,9 +26,8 @@ public class SettlementerDaoImpl implements SettlementerDao {
 
 	@Override
 	public List<String> getAllSettlementer(String beginDay, String endDay) {
-		return jdbc.queryForList(
-			"select DISTINCT t.settlementer_name from t_ms_order_settlement_record t where t.settlementer_code not in"
-				+ " ('A02379', 'A02376') and t.settlement_date >= DATE_FORMAT( ?, '%Y-%m-%d' ) AND t.settlement_date <= DATE_FORMAT( ?, '%Y-%m-%d' )",
+		return jdbc.queryForList("select DISTINCT t.settlementer_name from t_ms_order_settlement_record t where t.settlementer_code not in"
+				+ " ('A02379', 'A02376', 'A087135') and t.settlement_date >= DATE_FORMAT( ?, '%Y-%m-%d' ) AND t.settlement_date <= DATE_FORMAT( ?, '%Y-%m-%d' )",
 			String.class,
 			beginDay,
 			endDay);
@@ -37,7 +36,7 @@ public class SettlementerDaoImpl implements SettlementerDao {
 	@Override
 	public List<SettlementRecords> getSettlementRecords(String settlementerName, String beginDay, String endDay) {
 		return jdbc.query(
-			"SELECT order_sn,order_date,settlement_type_name,order_amount,settlement_discount,settlementer_name,settlementer_amount,settlement_date ,a.full_address,a.consignee "
+			"SELECT order_sn,order_date,settlement_type_name,order_amount,settlement_discount,settlementer_name,settlementer_amount,settlement_date ,a.consignee,a.full_address "
 				+ "FROM t_ms_order_settlement_record t , t_ws_member_address a,t_ms_order o "
 				+ "WHERE t.settlementer_name = ? AND t.settlement_date >= DATE_FORMAT( ?, '%Y-%m-%d' ) "
 				+ "AND t.settlement_date <= DATE_FORMAT( ?, '%Y-%m-%d' ) " + "AND a.id = o.express_address_id "

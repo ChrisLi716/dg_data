@@ -30,8 +30,7 @@ public class CommonUtils {
 		return success;
 	}
 
-	public static void generateCsvFile(String path, String fileName, List<String> header,
-		List<SettlementRecords> settlementRecords) {
+	public static void generateCsvFile(String path, String fileName, List<String> header, List<SettlementRecords> settlementRecords) {
 		CSVPrinter csvPrinter = null;
 		try {
 			FileOutputStream fos = new FileOutputStream(path + File.separator + fileName);
@@ -54,7 +53,6 @@ public class CommonUtils {
 					sr.getAssignee(),
 					sr.getAssigneeAddress());
 			}
-
 		}
 		catch (IOException e) {
 			e.printStackTrace();
