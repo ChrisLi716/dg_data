@@ -6,9 +6,11 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
-import java.time.Month;
 import java.util.Calendar;
 import java.util.List;
 
@@ -35,9 +37,7 @@ public class CommonUtils {
 		try {
 			FileOutputStream fos = new FileOutputStream(path + File.separator + fileName);
 			logger.info("generateCsvFile, writing csv file : " + path + File.separator + fileName);
-
 			OutputStreamWriter osw = new OutputStreamWriter(fos, "GBK");
-
 			CSVFormat csvFormat = CSVFormat.DEFAULT.withHeader(header.toArray(new String[0]));
 			csvPrinter = new CSVPrinter(osw, csvFormat);
 
@@ -50,8 +50,8 @@ public class CommonUtils {
 					sr.getSettlementer_name(),
 					sr.getSettlementer_amount(),
 					sr.getSettlement_date(),
-					sr.getAssignee(),
-					sr.getAssigneeAddress());
+					sr.getAssigneeAddress(),
+					sr.getAssignee());
 			}
 		}
 		catch (IOException e) {
