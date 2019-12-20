@@ -3,6 +3,9 @@ package com.chris.dg_data.controller;
 import com.chris.dg_data.beans.Conditions;
 import com.chris.dg_data.beans.SettlementRecords;
 import com.chris.dg_data.common.CommonUtils;
+import com.chris.dg_data.common.CsvExporter;
+import com.chris.dg_data.common.ExcelExporter;
+import com.chris.dg_data.common.FileType;
 import com.chris.dg_data.service.SettlementerService;
 import com.chris.dg_data.threadpool.GlobalThreadPool;
 import org.apache.commons.lang3.StringUtils;
@@ -21,7 +24,7 @@ import java.util.*;
 @RequestMapping("/dg")
 public class DgProducer {
 
-	private static Logger logger = Logger.getLogger(CommonUtils.class);
+	private static Logger logger = Logger.getLogger(DgProducer.class);
 
 	@Value("${basepath}")
 	private String basePath;
@@ -35,9 +38,16 @@ public class DgProducer {
 	@Autowired
 	private SettlementerService settlementerService;
 
-	@RequestMapping(value = "/generateDgData", method = RequestMethod.GET)
-	public String generateDgData(@RequestParam(value = "year", required = false) String year,
-		@RequestParam(value = "month") String month, @RequestParam(value = "threads") String threads) {
+	@RequestMapping(value = "/generateDgData",
+					method = RequestMethod.GET)
+	public String generateDgData(
+		@RequestParam(value = "year",
+					  required = false)
+			String year,
+		@RequestParam(value = "month")
+			String month,
+		@RequestParam(value = "threads")
+			String threads) {
 
 		List<String> allSettlementer = new ArrayList<>();
 
@@ -61,11 +71,39 @@ public class DgProducer {
 		}
 
 		String logInfo =
-			"Amount of settlementer :" + allSettlementer.size() + ",[" + firstDateOfMonth + " To " + lastDateOfMonth
-				+ "]" + ", " + allSettlementer.toString();
+			"Amount of settlementer :" + allSettlementer.size() + ",[" + firstDateOfMonth + " To " + lastDateOfMonth + "]" + ", "
+				+ allSettlementer.toString();
 		logger.info(logInfo);
 
 		return logInfo;
+	}
+
+	private void processEachBatch(String year, String month, List<String> one_block) {
+		GlobalThreadPool.execute(() -> {
+			String threadName = Thread.currentThread().getName();
+			for (String settlementer : one_block) {
+				String settlementerDir = basePath + File.separator + month + File.separator + settlementer.trim();
+
+				if (CommonUtils.generateFolder(settlementerDir)) {
+					List<Conditions> conditionsList = generateInterval(Integer.parseInt(month));
+					for (Conditions conditions : conditionsList) {
+						String beginDateStr = year + "-" + month + "-" + conditions.getBeginDay();
+						String endDateStr = year + "-" + month + "-" + conditions.getEndDay();
+						logger.info(threadName + ", settlementer:" + settlementer + "[" + beginDateStr + " To " + endDateStr + "]");
+
+						List<SettlementRecords> records = settlementerService.getSettlementRecords(settlementer, beginDateStr, endDateStr);
+
+						/*String csvFileName =
+							conditions.getBeginDay() + "-" + conditions.getEndDay() + "." + FileType.CSV.getValue();
+						CsvExporter.generateCsvFile(settlementerDir, csvFileName, header, records);*/
+
+						String excelFileName =
+							conditions.getBeginDay() + "-" + conditions.getEndDay() + "." + FileType.EXCEL.getValue();
+						ExcelExporter.exportExcel(settlementerDir, excelFileName, header, records);
+					}
+				}
+			}
+		});
 	}
 
 	private void generateDataFileInBatchs(String year, String month, List<String> allSettlementer, int threads) {
@@ -89,32 +127,6 @@ public class DgProducer {
 			processEachBatch(year, month, allSettlementer);
 		}
 
-	}
-
-	private void processEachBatch(String year, String month, List<String> one_block) {
-		GlobalThreadPool.execute(() -> {
-			String threadName = Thread.currentThread().getName();
-			for (String settlementer : one_block) {
-				String settlementerDir = basePath + File.separator + month + File.separator + settlementer.trim();
-
-				if (CommonUtils.generateFolder(settlementerDir)) {
-					List<Conditions> conditionsList = generateInterval(Integer.parseInt(month));
-					for (Conditions conditions : conditionsList) {
-						String beginDateStr = year + "-" + month + "-" + conditions.getBeginDay();
-						String endDateStr = year + "-" + month + "-" + conditions.getEndDay();
-						logger.info(
-							threadName + ", settlementer:" + settlementer + "[" + beginDateStr + " To " + endDateStr
-								+ "]");
-
-						List<SettlementRecords> records =
-							settlementerService.getSettlementRecords(settlementer, beginDateStr, endDateStr);
-
-						String csvFileName = conditions.getBeginDay() + "-" + conditions.getEndDay() + ".csv";
-						CommonUtils.generateCsvFile(settlementerDir, csvFileName, header, records);
-					}
-				}
-			}
-		});
 	}
 
 	/**
