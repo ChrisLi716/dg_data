@@ -5,3 +5,8 @@ month: 月，必填
 threads: 并发数， 可选，如果不输入，系统默认并发量为20
 
 在application.properties中需修改文件生成的目录basepath=D:\\temp
+
+
+
+
+http://localhost:8080/rmq/produdermsg?input=
