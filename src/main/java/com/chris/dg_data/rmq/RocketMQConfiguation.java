@@ -26,12 +26,11 @@ import java.util.Map;
 					   value = "isEnable",
 					   havingValue = "true")
 public class RocketMQConfiguation {
+	private Logger log = LoggerFactory.getLogger(RocketMQConfiguation.class);
 
 	private RocketMQProperties properties;
 
 	private ApplicationContext applicationContext;
-
-	private Logger log = LoggerFactory.getLogger(RocketMQConfiguation.class);
 
 	public RocketMQConfiguation(RocketMQProperties properties, ApplicationContext applicationContext) {
 		this.properties = properties;
@@ -61,6 +60,7 @@ public class RocketMQConfiguation {
 
 		// 如果需要同一个jvm中不同的producer往不同的mq集群发送消息，需要设置不同的instanceName
 		// producer.setInstanceName(instanceName);
+
 		producer.setMaxMessageSize(properties.getProducerMaxMessageSize());
 		producer.setSendMsgTimeout(properties.getProducerSendMsgTimeout());
 
@@ -79,7 +79,7 @@ public class RocketMQConfiguation {
 	}
 
 	/**
-	 * 通过消费者信心创建消费者
+	 * 通过消费者信息创建消费者
 	 *
 	 * @param consumerPojo
 	 */
@@ -115,6 +115,7 @@ public class RocketMQConfiguation {
 	@PostConstruct
 	public void initConsumer() {
 		Map<String, AbstractConsumer> consumers = applicationContext.getBeansOfType(AbstractConsumer.class);
+		log.info("load all consumer, sum: {}", consumers.size());
 		if (CollectionUtils.isEmpty(consumers)) {
 			log.info("init rocket consumer 0");
 			return;
@@ -123,6 +124,7 @@ public class RocketMQConfiguation {
 			AbstractConsumer consumer = consumers.get(beanName);
 			consumer.init();
 			createConsumer(consumer);
+
 			log.info("init success consumer title {} , toips {} , tags {}",
 				consumer.getConsumerTitel(),
 				consumer.getTags(),
